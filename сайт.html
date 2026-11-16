@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minecraft Server — Донат</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --panel-dark: #0f1420;
+    --text: #eeeeee;
+    --text-dim: #aaaaaa;
+    --accent: #a4e05a;
+    --accent-dark: #4a7c2e;
+    --accent-hover: #6aad3e;
+    --gold: #ffd700;
+    --red: #e63946;
+    --red-hover: #ff4d5a;
+    --border: #4a7c2e;
+    --warning-bg: #2d2416;
+    --warning: #ffb347;
+    --header-grad: linear-gradient(135deg,#2d5016,#4a7c2e);
+  }
+  body.light {
+    --bg: #f0f4e8;
+    --panel: #ffffff;
+    --panel-dark: #e8eedb;
+    --text: #1a1a2e;
+    --text-dim: #555;
+    --accent: #2d5016;
+    --accent-dark: #4a7c2e;
+    --accent-hover: #3a6b1e;
+    --gold: #b8860b;
+    --red: #c0392b;
+    --red-hover: #e74c3c;
+    --border: #4a7c2e;
+    --warning-bg: #fff4d6;
+    --warning: #b86e00;
+    --header-grad: linear-gradient(135deg,#4a7c2e,#6aad3e);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial,sans-serif; }
+  body { background:var(--bg); color:var(--text); min-height:100vh; transition:background .3s,color .3s; }
+  header { background:var(--header-grad); padding:20px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,.3); position:relative; }
+  header h1 { color:var(--accent); text-shadow:2px 2px 0 #000; font-size:28px; }
+  header p { color:#ddd; margin-top:5px; }
+  .top-controls { position:absolute; top:15px; left:20px; display:flex; gap:8px; }
+  .ctrl-btn { background:rgba(0,0,0,.3); color:#fff; border:1px solid rgba(255,255,255,.3); padding:6px 12px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:13px; transition:.2s; }
+  .ctrl-btn:hover { background:rgba(0,0,0,.5); }
+  .container { max-width:1100px; margin:30px auto; padding:0 15px; }
+  h2 { color:var(--accent); margin:25px 0 15px; border-bottom:2px solid var(--border); padding-bottom:8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:15px; }
+  .card { background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:15px; text-align:center; transition:.2s; }
+  .card:hover { transform:translateY(-3px); border-color:var(--accent); box-shadow:0 5px 20px rgba(164,224,90,.3); }
+  body.light .card:hover { box-shadow:0 5px 20px rgba(45,80,22,.2); }
+  .card h3 { color:var(--accent); font-size:18px; margin-bottom:8px; }
+  .price { color:var(--text); font-size:20px; font-weight:bold; margin:8px 0; }
+  .btn { background:var(--accent-dark); color:#fff; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:bold; transition:.2s; width:100%; margin-top:5px; }
+  .btn:hover { background:var(--accent-hover); }
+  .btn-gold { background:var(--gold); color:#1a1a2e; }
+  .btn-gold:hover { filter:brightness(1.15); }
+  .btn-buy { background:var(--red); color:#fff; }
+  .btn-buy:hover { background:var(--red-hover); }
+  .gold-section { background:var(--panel); border:2px dashed var(--gold); border-radius:12px; padding:20px; margin:20px 0; }
+  .gold-section label { display:block; margin-bottom:8px; color:var(--gold); font-weight:bold; }
+  .gold-section input { width:100%; padding:12px; border-radius:8px; border:2px solid var(--gold); background:var(--panel-dark); color:var(--text); font-size:18px; text-align:center; }
+  .gold-section .rate { color:var(--text-dim); margin-top:8px; text-align:center; }
+  #cartBtn { position:fixed; top:20px; right:20px; background:var(--red); color:#fff; border:none; padding:12px 20px; border-radius:50px; cursor:pointer; font-weight:bold; font-size:16px; box-shadow:0 4px 15px rgba(0,0,0,.5); z-index:100; }
+  #cartBtn:hover { background:var(--red-hover); }
+  #cartPanel { position:fixed; top:0; right:-420px; width:400px; max-width:95vw; height:100vh; background:var(--panel-dark); border-left:3px solid var(--border); padding:20px; transition:right .3s; z-index:101; overflow-y:auto; }
+  #cartPanel.open { right:0; }
+  #cartPanel h3 { color:var(--accent); margin-bottom:15px; cursor:move; user-select:none; }
+  .cart-item { background:var(--panel); border-radius:8px; padding:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .cart-item .name { color:var(--text); font-weight:bold; font-size:14px; }
+  .cart-item .sub { color:var(--text-dim); font-size:12px; }
+  .cart-item .remove { background:var(--red); border:none; color:#fff; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:16px; }
+  .cart-item .remove:hover { background:var(--red-hover); }
+  .cart-total { background:var(--panel); padding:15px; border-radius:8px; margin-top:15px; text-align:center; }
+  .cart-total .sum { font-size:24px; color:var(--gold); font-weight:bold; }
+  .cart-total button { margin-top:10px; }
+  .empty-cart { color:var(--text-dim); text-align:center; padding:30px 0; }
+  .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.8); z-index:200; align-items:center; justify-content:center; padding:15px; }
+  .overlay.open { display:flex; }
+  .modal { background:var(--panel); border:2px solid var(--border); border-radius:15px; padding:25px; max-width:500px; width:100%; max-height:90vh; overflow-y:auto; }
+  .modal h3 { color:var(--accent); margin-bottom:15px; text-align:center; }
+  .modal label { display:block; color:var(--text-dim); margin:12px 0 5px; }
+  .modal input { width:100%; padding:12px; border-radius:8px; border:2px solid var(--border); background:var(--panel-dark); color:var(--text); font-size:16px; }
+  .modal input:focus { outline:none; border-color:var(--accent); }
+  .modal .btn { margin-top:18px; }
+  .pay-info { background:var(--panel-dark); border:2px dashed var(--gold); border-radius:10px; padding:15px; margin:15px 0; }
+  .pay-info .label { color:var(--text-dim); font-size:13px; margin-bottom:4px; }
+  .pay-info .value { color:var(--text); font-size:18px; font-weight:bold; word-break:break-all; }
+  .pay-info .kaspi { color:var(--gold); font-size:22px; letter-spacing:2px; }
+  .comment-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; color:var(--accent); font-family:monospace; font-size:14px; word-break:break-word; margin-top:6px; }
+  .copy-btn { background:var(--accent-dark); color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; margin-top:8px; width:100%; font-weight:bold; }
+  .copy-btn:hover { background:var(--accent-hover); }
+  .copy-btn.copied { background:#2d5016; }
+  .items-list { list-style:none; margin:10px 0; }
+  .items-list li { background:var(--panel-dark); padding:8px 12px; border-radius:6px; margin-bottom:6px; color:var(--text-dim); display:flex; justify-content:space-between; font-size:14px; }
+  .items-list li span { color:var(--gold); font-weight:bold; }
+  .close-x { float:right; background:none; border:none; color:var(--red); font-size:24px; cursor:pointer; line-height:1; }
+  .close-x:hover { color:var(--red-hover); }
+  .success { color:var(--accent); text-align:center; font-size:15px; margin-top:10px; }
+  .warning { color:var(--warning); text-align:center; font-size:13px; margin-top:12px; background:var(--warning-bg); padding:10px; border-radius:8px; border:1px solid var(--warning); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top-controls">
+    <button class="ctrl-btn" id="langBtn" onclick="toggleLang()">🌐 RU</button>
+    <button class="ctrl-btn" id="themeBtn" onclick="toggleTheme()">☀️ Ақ</button>
+  </div>
+  <h1 data-i18n="title">⛏ Minecraft Server</h1>
+  <p data-i18n="subtitle">Донат дүкені — Kaspi арқылы төлем</p>
+</header>
+
+<button id="cartBtn" onclick="toggleCart()">🛒 <span data-i18n="cart">Корзина</span> (<span id="cartCount">0</span>)</button>
+
+<div class="container">
+
+  <h2 data-i18n="donatesTitle">💎 Донат пакеттер</h2>
+  <div class="grid" id="donateGrid"></div>
+
+  <h2 data-i18n="casesTitle">🎁 Кейстер</h2>
+  <div class="grid" id="caseGrid"></div>
+
+  <h2 data-i18n="goldTitle">🪙 Алтын сатып алу</h2>
+  <div class="gold-section">
+    <label data-i18n="goldLabel">Қанша алтын керек? (өзіңіз жазыңыз)</label>
+    <input type="number" id="goldInput" min="1" placeholder="100" oninput="updateGoldSum()">
+    <div class="rate"><span data-i18n="goldRate">1 алтын = 3₸</span> <span id="goldSum" style="color:var(--gold);font-weight:bold;"></span></div>
+    <button class="btn btn-gold" onclick="addGoldToCart()">🛒 <span data-i18n="addToCart">Корзинаға қосу</span></button>
+  </div>
+
+</div>
+
+<div id="cartPanel">
+  <h3 id="cartDragHandle">🛒 <span data-i18n="cart">Корзина</span> <span style="font-size:12px;color:var(--text-dim);" data-i18n="dragHint">(сүйреп жылжытуға болады)</span></h3>
+  <button class="close-x" onclick="toggleCart()" style="margin-top:-25px;">✕</button>
+  <div id="cartItems"></div>
+  <div class="cart-total" id="cartTotal" style="display:none;">
+    <div data-i18n="totalSum">Жалпы сумма:</div>
+    <div class="sum" id="totalSum">0₸</div>
+    <button class="btn btn-buy" onclick="openCheckout()">💳 <span data-i18n="pay">Оплатить</span></button>
+  </div>
+</div>
+
+<div class="overlay" id="nickOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('nickOverlay')">✕</button>
+    <h3 data-i18n="nickTitle">Никнейміңізді жазыңыз</h3>
+    <label data-i18n="nickLabel">Minecraft никнейм:</label>
+    <input type="text" id="nickInput" placeholder="Steve123">
+    <button class="btn btn-buy" onclick="confirmNick()">✅ <span data-i18n="confirm">Растау</span></button>
+  </div>
+</div>
+
+<div class="overlay" id="payOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('payOverlay')">✕</button>
+    <h3 data-i18n="payTitle">💳 Төлем ақпараты</h3>
+    <div class="pay-info">
+      <div class="label" data-i18n="kaspiLabel">Kaspi номер (16 цифр):</div>
+      <div class="value kaspi">1234 5678 9123 4567</div>
+      <button class="copy-btn" onclick="copyKaspi(this)">📋 <span data-i18n="copyNum">Номерді көшіру</span></button>
+    </div>
+    <div class="pay-info">
+      <div class="label" data-i18n="nickLabel2">Никнейм:</div>
+      <div class="value" id="payNick">—</div>
+    </div>
+    <div class="pay-info">
+      <div class="label" data-i18n="yourOrder">Сіздің тапсырысыңыз:</div>
+      <ul class="items-list" id="payItems"></ul>
+      <div style="text-align:right;margin-top:8px;"><span data-i18n="total">Барлығы:</span> <span style="color:var(--gold);font-weight:bold;font-size:20px;" id="payTotal">0₸</span></div>
+    </div>
+    <div class="pay-info" style="border-color:var(--border);">
+      <div class="label" data-i18n="commentLabel">Kaspi комментарийіне мынаны қойыңыз:</div>
+      <div class="comment-box" id="commentText">—</div>
+      <button class="copy-btn" onclick="copyComment(this)">📋 <span data-i18n="copyComment">Комментарийді көшіру</span></button>
+      <div style="color:var(--warning);font-size:13px;margin-top:10px;line-height:1.5;">
+        <span data-i18n="warning1">⚠️ Төлем жасалған соң әкімшіге хабарласыңыз.</span><br>
+        <span data-i18n="warning2">Заттар <b>24 сағат ішінде қолмен беріледі</b>.</span>
+      </div>
+    </div>
+    <p class="success" data-i18n="thanks">Рақмет! 🎮</p>
+  </div>
+</div>
+
+<script>
+// ====== ДЕРЕКТЕР ======
+const DONATES = [
+  { name: "AAAA", price: 1111 },
+  { name: "BBBB", price: 2222 },
+  { name: "CCCC", price: 3333 },
+  { name: "DDDD", price: 4444 },
+  { name: "EEEE", price: 5555 },
+  { name: "FFFF", price: 6666 }
+];
+
+const CASES = [
+  { name: "AAA кейс", price: 111 },
+  { name: "BBB кейс", price: 222 },
+  { name: "CCC кейс", price: 333 },
+  { name: "DDD кейс", price: 444 },
+  { name: "EEE кейс", price: 555 }
+];
+
+const GOLD_RATE = 3;
+const KASPI_NUMBER = "1234567891234567";
+
+// ====== ТІЛ ======
+const TRANSLATIONS = {
+  kk: {
+    title: "⛏ Minecraft Server",
+    subtitle: "Донат дүкені — Kaspi арқылы төлем",
+    cart: "Корзина",
+    donatesTitle: "💎 Донат пакеттер",
+    casesTitle: "🎁 Кейстер",
+    goldTitle: "🪙 Алтын сатып алу",
+    goldLabel: "Қанша алтын керек? (өзіңіз жазыңыз)",
+    goldRate: "1 алтын = 3₸",
+    addToCart: "Корзинаға қосу",
+    dragHint: "(сүйреп жылжытуға болады)",
+    totalSum: "Жалпы сумма:",
+    pay: "Төлеу",
+    nickTitle: "Никнейміңізді жазыңыз",
+    nickLabel: "Minecraft никнейм:",
+    confirm: "Растау",
+    payTitle: "💳 Төлем ақпараты",
+    kaspiLabel: "Kaspi номер (16 цифр):",
+    copyNum: "Номерді көшіру",
+    nickLabel2: "Никнейм:",
+    yourOrder: "Сіздің тапсырысыңыз:",
+    total: "Барлығы:",
+    commentLabel: "Kaspi комментарийіне мынаны қойыңыз:",
+    copyComment: "Комментарийді көшіру",
+    warning1: "Заттар 24 сағат ішінде қолмен беріледі.",
+    warning2: " ",
+    thanks: "Рақмет! 🎮",
+    emptyCart: "Корзина бос",
+    alertGold: "Алтын санын жазыңыз!",
+    alertNick: "Никнейміңізді жазыңыз!",
+    copied: "✅ Көшірілді!",
+    case: "Кейс",
+    donate: "Пакет"
+  },
+  ru: {
+    title: "⛏ Minecraft Server",
+    subtitle: "Донат магазин — оплата через Kaspi",
+    cart: "Корзина",
+    donatesTitle: "💎 Донат пакеты",
+    casesTitle: "🎁 Кейсы",
+    goldTitle: "🪙 Покупка золота",
+    goldLabel: "Сколько золота нужно? (введите сами)",
+    goldRate: "1 золото = 3₸",
+    addToCart: "В корзину",
+    dragHint: "(можно перетаскивать)",
+    totalSum: "Общая сумма:",
+    pay: "Оплатить",
+    nickTitle: "Введите ваш никнейм",
+    nickLabel: "Minecraft никнейм:",
+    confirm: "Подтвердить",
+    payTitle: "💳 Информация об оплате",
+    kaspiLabel: "Kaspi номер (16 цифр):",
+    copyNum: "Копировать номер",
+    nickLabel2: "Никнейм:",
+    yourOrder: "Ваш заказ:",
+    total: "Итого:",
+    commentLabel: "Укажите это в комментарии Kaspi:",
+    copyComment: "Копировать комментарий",
+    warning1: "Предметы выдаются вручную в течение 24 часов.",
+    warning2: " ",
+    thanks: "Спасибо! 🎮",
+    emptyCart: "Корзина пуста",
+    alertGold: "Введите количество золота!",
+    alertNick: "Введите ваш никнейм!",
+    copied: "✅ Скопировано!",
+    case: "Кейс",
+    donate: "Пакет"
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'kk';
+let currentTheme = localStorage.getItem('theme') || 'dark';
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || key;
+}
+
+function applyLang() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.getElementById('langBtn').textContent = currentLang === 'kk' ? '🌐 RU' : '🌐 KZ';
+  renderDonates();
+  renderCases();
+  updateCart();
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'kk' ? 'ru' : 'kk';
+  localStorage.setItem('lang', currentLang);
+  applyLang();
+}
+
+function applyTheme() {
+  if (currentTheme === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('themeBtn').textContent = '🌙 Қара';
+  } else {
+    document.body.classList.remove('light');
+    document.getElementById('themeBtn').textContent = '☀️ Ақ';
+  }
+}
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', currentTheme);
+  applyTheme();
+}
+
+// ====== КОРЗИНА ======
+let cart = [];
+
+function renderDonates() {
+  const grid = document.getElementById('donateGrid');
+  grid.innerHTML = DONATES.map((d, i) => `
+    <div class="card">
+      <h3>${d.name}</h3>
+      <div class="price">${d.price.toLocaleString()}₸</div>
+      <button class="btn" onclick="addDonate(${i})">🛒 ${t('addToCart')}</button>
+    </div>
+  `).join('');
+}
+
+function renderCases() {
+  const grid = document.getElementById('caseGrid');
+  grid.innerHTML = CASES.map((c, i) => `
+    <div class="card">
+      <h3>${c.name}</h3>
+      <div class="price">${c.price.toLocaleString()}₸</div>
+      <button class="btn" onclick="addCase(${i})">🛒 ${t('addToCart')}</button>
+    </div>
+  `).join('');
+}
+
+function addDonate(i) {
+  const d = DONATES[i];
+  cart.push({ type:'donate', name:d.name, price:d.price });
+  updateCart();
+}
+
+function addCase(i) {
+  const c = CASES[i];
+  cart.push({ type:'case', name:c.name, price:c.price });
+  updateCart();
+}
+
+function updateGoldSum() {
+  const val = parseInt(document.getElementById('goldInput').value) || 0;
+  document.getElementById('goldSum').textContent = val > 0 ? `= ${(val*GOLD_RATE).toLocaleString()}₸` : '';
+}
+
+function addGoldToCart() {
+  const input = document.getElementById('goldInput');
+  const val = parseInt(input.value);
+  if (!val || val < 1) { alert(t('alertGold')); return; }
+  const goldWord = currentLang === 'kk' ? 'алтын' : 'золота';
+  cart.push({ type:'gold', name:`${val} ${goldWord}`, price: val*GOLD_RATE, gold: val });
+  input.value = '';
+  updateGoldSum();
+  updateCart();
+}
+
+function updateCart() {
+  const count = cart.length;
+  document.getElementById('cartCount').textContent = count;
+  const itemsDiv = document.getElementById('cartItems');
+  const totalDiv = document.getElementById('cartTotal');
+
+  if (count === 0) {
+    itemsDiv.innerHTML = `<div class="empty-cart">${t('emptyCart')}</div>`;
+    totalDiv.style.display = 'none';
+    return;
+  }
+
+  itemsDiv.innerHTML = cart.map((item, i) => {
+    let subText;
+    if (item.type === 'gold') {
+      subText = currentLang === 'kk' ? `${item.gold} алтын × 3₸` : `${item.gold} золота × 3₸`;
+    } else {
+      subText = item.type === 'case' ? t('case') : t('donate');
+    }
+    return `
+    <div class="cart-item">
+      <div>
+        <div class="name">${item.name}</div>
+        <div class="sub">${subText}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--gold);font-weight:bold;">${item.price.toLocaleString()}₸</span>
+        <button class="remove" onclick="removeItem(${i})">✕</button>
+      </div>
+    </div>
+  `;
+  }).join('');
+
+  const total = cart.reduce((s, it) => s + it.price, 0);
+  document.getElementById('totalSum').textContent = total.toLocaleString() + '₸';
+  totalDiv.style.display = 'block';
+}
+
+function removeItem(i) {
+  cart.splice(i, 1);
+  updateCart();
+}
+
+function toggleCart() {
+  const panel = document.getElementById('cartPanel');
+  panel.classList.toggle('open');
+  // Егер жабылып жатса және жылжытылған болса — орнына қайтару
+  if (!panel.classList.contains('open') && panel.dataset.dragged === 'true') {
+    panel.style.left = '';
+    panel.style.top = '';
+    panel.style.right = '';
+    panel.dataset.dragged = 'false';
+  }
+}
+
+function openCheckout() {
+  if (cart.length === 0) return;
+  document.getElementById('nickInput').value = '';
+  document.getElementById('nickOverlay').classList.add('open');
+}
+
+function confirmNick() {
+  const nick = document.getElementById('nickInput').value.trim();
+  if (!nick) { alert(t('alertNick')); return; }
+  closeModal('nickOverlay');
+
+  document.getElementById('payNick').textContent = nick;
+
+  const total = cart.reduce((s, it) => s + it.price, 0);
+  document.getElementById('payTotal').textContent = total.toLocaleString() + '₸';
+
+  document.getElementById('payItems').innerHTML = cart.map(it =>
+    `<li>${it.name} <span>${it.price.toLocaleString()}₸</span></li>`
+  ).join('');
+
+  const itemNames = cart.map(it => it.name).join(', ');
+  const comment = `${nick} | ${itemNames} | ${total.toLocaleString()}₸`;
+  document.getElementById('commentText').textContent = comment;
+
+  document.getElementById('payOverlay').classList.add('open');
+
+  cart = [];
+  updateCart();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function copyKaspi(btn) {
+  copyText(KASPI_NUMBER, btn, '📋 ' + t('copyNum'));
+}
+
+function copyComment(btn) {
+  const text = document.getElementById('commentText').textContent;
+  copyText(text, btn, '📋 ' + t('copyComment'));
+}
+
+function copyText(text, btn, originalText) {
+  const done = () => {
+    btn.innerHTML = t('copied');
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.classList.remove('copied');
+    }, 2000);
+  };
+  navigator.clipboard.writeText(text).then(done).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    done();
+  });
+}
+
+// ====== КОРЗИНАНЫ СҮЙРЕУ (түзетілген) ======
+(function makeDraggable() {
+  const panel = document.getElementById('cartPanel');
+  const handle = document.getElementById('cartDragHandle');
+  let isDragging = false, startX, startY, startLeft, startTop;
+
+  function activateDragMode() {
+    if (panel.dataset.dragged === 'true') return;
+    const rect = panel.getBoundingClientRect();
+    panel.style.transition = 'none';
+    panel.style.right = 'auto';
+    panel.style.left = rect.left + 'px';
+    panel.style.top = rect.top + 'px';
+    panel.dataset.dragged = 'true';
+  }
+
+  function start(clientX, clientY) {
+    if (!panel.classList.contains('open')) return;
+    isDragging = true;
+    activateDragMode();
+    const rect = panel.getBoundingClientRect();
+    startX = clientX;
+    startY = clientY;
+    startLeft = rect.left;
+    startTop = rect.top;
+  }
+
+  function move(clientX, clientY) {
+    if (!isDragging) return;
+    let newLeft = startLeft + (clientX - startX);
+    let newTop = startTop + (clientY - startY);
+    const maxLeft = window.innerWidth - panel.offsetWidth;
+    const maxTop = window.innerHeight - 60;
+    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+    newTop = Math.max(0, Math.min(newTop, maxTop));
+    panel.style.left = newLeft + 'px';
+    panel.style.top = newTop + 'px';
+  }
+
+  function end() {
+    if (!isDragging) return;
+    isDragging = false;
+    document.body.style.userSelect = '';
+  }
+
+  handle.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('close-x')) return;
+    e.preventDefault();
+    document.body.style.userSelect = 'none';
+    start(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) move(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('mouseup', end);
+
+  handle.addEventListener('touchstart', (e) => {
+    const t0 = e.touches[0];
+    start(t0.clientX, t0.clientY);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const t0 = e.touches[0];
+    move(t0.clientX, t0.clientY);
+  }, { passive: true });
+
+  document.addEventListener('touchend', end);
+})();
+
+// ====== ИНИЦИАЛИЗАЦИЯ ======
+applyTheme();
+applyLang();
+</script>
+</body>
+</html>
